@@ -1,4 +1,7 @@
+using Hangfire;
 using Microsoft.AspNetCore.Mvc;
+using SIDAPI.Models;
+using SIDAPI.Services;
 
 namespace SIDAPI.Controllers;
 
@@ -12,10 +15,12 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, IBackgroundJobClient backgroundJobClient)
     {
         _logger = logger;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
@@ -28,5 +33,14 @@ public class WeatherForecastController : ControllerBase
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
         })
         .ToArray();
+    }
+
+    [HttpPost("send")]
+    public IActionResult SendEmail([FromBody] EmailRequest request)
+    {
+        _backgroundJobClient.Enqueue<EmailService>(emailService =>
+            emailService.SendEmailAsync(request.Recipient, request.Subject, request.Body));
+
+        return Ok("? Email job added to the background queue!");
     }
 }
