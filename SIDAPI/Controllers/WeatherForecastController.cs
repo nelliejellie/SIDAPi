@@ -35,7 +35,7 @@ public class WeatherForecastController : ControllerBase
         .ToArray();
     }
 
-    [HttpPost("send")]
+    [HttpPost("sendmail")]
     public IActionResult SendEmail([FromBody] EmailRequest request)
     {
         _backgroundJobClient.Enqueue<EmailService>(emailService =>
